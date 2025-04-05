@@ -8,11 +8,40 @@
                     </h4>
                 </div>
 
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="filterCustomer">Filtrar por Cliente:</label>
+                        <select wire:model="filterCustomer" wire:change="getCredits" class="form-control">
+                            <option value="">-- Todos --</option>
+                            @foreach (\App\Models\Customer::orderBy('name')->get() as $c)
+                                <option value="{{ $c->id }}">{{ $c->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="filterStatus">Filtrar por Estado:</label>
+                        <select wire:model="filterStatus" wire:change="getCredits" class="form-control">
+                            <option value="">-- Todos --</option>
+                            <option value="PENDIENTE">Pendiente</option>
+                            <option value="PAGADO">Pagado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button wire:click="resetFilters" class="btn btn-secondary w-100">
+                            Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+
+
                 <!-- Tabla de Créditos -->
                 <div class="table-responsive">
                     <table class="table table-bordered">
                     <thead class="bg-white text-white" style="color: white;">
                             <tr>
+                                <th>Fecha</th>
                                 <th>Cliente</th>
                                 <th>Monto Total</th>
                                 <th>Pagado</th>
@@ -24,6 +53,7 @@
                         <tbody>
                             @foreach ($credits as $credit)
                                 <tr>
+                                    <td>{{ $credit->created_at->format('d/m/Y') }}</td>
                                     <td>{{ optional($credit->customer)->name ?? 'Sin cliente' }}</td>
                                     <td>{{ number_format($credit->total_credit, 2) }} Gs.</td>
                                     <td>{{ number_format(min($credit->amount_paid, $credit->total_credit), 2) }} Gs.</td>
@@ -40,10 +70,11 @@
                                     </td>
                                     <td>
                                         @if ($credit->status == 'PENDIENTE' && $credit->remaining_balance > 0)
-                                            <button wire:click="openPaymentModal({{ $credit->id }})"
+                                           <button wire:click="openPaymentModal({{ $credit->id }})"
                                                 class="btn btn-primary btn-sm">
                                                 Pagar
                                             </button>
+
                                         @else
                                             <button class="btn btn-secondary btn-sm" disabled>Liquidado</button>
                                         @endif
@@ -77,6 +108,10 @@
 
         window.livewire.on('credit-updated', () => {
             window.livewire.emit('refreshComponent'); // 🔄 Refresca Livewire
+        });
+
+        window.livewire.on('credit-error', (message) => {
+            alert(message); // 👈 Mensaje claro para el usuario
         });
     });
 </script>

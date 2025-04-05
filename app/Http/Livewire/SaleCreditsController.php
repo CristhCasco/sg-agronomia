@@ -12,8 +12,12 @@ use Illuminate\Support\Facades\Auth;
 class SaleCreditsController extends Component
 {
     public $credits, $creditId, $amount;
+    public $filterCustomer = '';
+    public $filterStatus = '';
 
-    protected $listeners = ['show-payment-modal' => 'openPaymentModal'];
+
+   // protected $listeners = ['show-payment-modal' => 'openPaymentModal'];
+    
 
 
     public function mount()
@@ -23,13 +27,23 @@ class SaleCreditsController extends Component
 
     public function getCredits()
     {
-        $this->credits = SaleCredit::with('customer')
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = SaleCredit::with('customer')->orderBy('created_at', 'desc');
+
+        if ($this->filterCustomer) {
+            $query->where('customer_id', $this->filterCustomer);
+        }
+
+        if ($this->filterStatus) {
+            $query->where('status', $this->filterStatus);
+        }
+
+        $this->credits = $query->get();
     }
+
 
     public function openPaymentModal($creditId = null)
     {
+        //Log::info('🧪 openPaymentModal llamado con ID: ' . json_encode($creditId));
         if (!$creditId) {
             $this->emit('credit-error', 'Error: ID de crédito no válido.');
             return;
@@ -96,5 +110,12 @@ class SaleCreditsController extends Component
             'credits' => SaleCredit::with('customer')->get()
         ])->extends('layouts.theme.app')->section('content'); // ⬅️ Aquí se define el `@extends`
     }
+
+    public function resetFilters()
+    {
+        $this->reset('filterCustomer', 'filterStatus');
+        $this->getCredits();
+    }
+
     
 }
