@@ -155,5 +155,18 @@ class SaleCreditsController extends Component
 
         $this->emit('show-credit-details');
     }
+
+    public function getAvailableCredit($customerId)
+    {
+        $customer = \App\Models\Customer::find($customerId);
+        if (!$customer) return 0;
+
+        $used = \App\Models\SaleCredit::where('customer_id', $customerId)
+            ->where('status', 'PENDIENTE')
+            ->sum('remaining_balance');
+
+        return max(0, $customer->credit_limit - $used); // Nunca negativo
+    }
+
         
 }

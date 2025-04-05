@@ -27,13 +27,10 @@
                         </select>
                         @error('payment_method') <span class="text-danger er">{{ $message }}</span> @enderror
                     </div>
-
-                    <div class="form-group">
-                        <label for="custom_due_date">Fecha de Vencimiento (opcional)</label>
+                    <div class="col-sm-6 form-group text-center">
+                        <label for="custom_due_date">Fecha de Vencimiento</label>
                         <input type="date" wire:model="custom_due_date" class="form-control" id="custom_due_date">
                     </div>
-
-                    
                 </div>
             </div>
         </div>

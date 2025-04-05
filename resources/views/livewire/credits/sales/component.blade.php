@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container-fluid px-4">
     <div class="row sales layout-top-spacing">
         <div class="col-sm-12">
             <div class="widget widget-chart-one">
@@ -68,6 +68,7 @@
                                 <th>Pendiente</th>
                                 <th>Estado</th>
                                 <th>Días para vencer</th>
+                                <th>Disponible</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -109,6 +110,12 @@
                                             <span class="text-muted">Sin vencimiento</span>
                                         @endif
                                     </td>
+
+                                    <td>
+                                        {{ number_format(app('App\Http\Livewire\SaleCreditsController')->getAvailableCredit($credit->customer_id), 0, ',', '.') }} Gs.
+                                    </td>
+
+
             
                                     <td>
                                         @if ($credit->status == 'PENDIENTE' && $credit->remaining_balance > 0)
