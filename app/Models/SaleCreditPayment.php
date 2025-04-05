@@ -13,4 +13,15 @@ class SaleCreditPayment extends Model
         'payment_date',
         'user_id'
     ];
+
+    protected $casts = [
+        'payment_date' => 'datetime',
+    ];
+    
+
+    public function saleCredit()
+    {
+        return $this->belongsTo(SaleCredit::class, 'credit_id'); // 👈 esta es la columna real
+    }
+
 }

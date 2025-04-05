@@ -16,7 +16,8 @@ class CustomersController extends Component
     use WithFileUploads;
 
 
-    public $search, $pageTitle, $componentName, $selected_id, $image, $person, $name, $email, $phone, $last_name, $ci, $company, $ruc, $address, $birthday, $description;
+    public $search, $pageTitle, $componentName, $selected_id, $image, $person, $name, $email, $phone,
+    $last_name, $ci, $company, $ruc, $address, $birthday, $description, $credit_limit;
     private $pagination = 5;
 
     public function mount ()
@@ -62,7 +63,8 @@ class CustomersController extends Component
             'name' => 'required|min:3',
             'last_name' => 'required|min:3',
             'ci' => 'required|numeric',
-            'phone' => 'required'
+            'phone' => 'required',
+            'credit_limit' => 'nullable|numeric|min:0'
         
             
         ];
@@ -93,7 +95,8 @@ class CustomersController extends Component
             'ruc' => $this->ruc,
             'address' => $this->address,
             'birthday' => $this->birthday,
-            'description' => $this->description
+            'description' => $this->description,
+            'credit_limit' => $this->credit_limit,
         ]);
 
         if ($this->image) {
@@ -165,7 +168,8 @@ class CustomersController extends Component
             'company' => $this->company,
             'ruc' => $this->ruc,
             'address' => $this->address,
-            'birthday' => $this->birthday
+            'birthday' => $this->birthday,
+            'credit_limit' => $this->credit_limit,
         ]);
 
         if ($this->image) 
@@ -228,6 +232,7 @@ class CustomersController extends Component
         $this->image = '';
         $this->search = '';
         $this->selected_id = 0;
+        $this->credit_limit = null;
         $this->resetValidation();
     }
 }

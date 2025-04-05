@@ -26,7 +26,10 @@ class PosController extends Component
     public $posCart;
     public $totalCart = 0;
     public $totalItems = 0;
-    public $total, $cash, $change, $customers = [], $customerId, $customerName, $status, $payment_type, $payment_method, $discount, $discount_total;
+    public $total, $cash, $change, $customers = [], $customerId,
+    $customerName, $status, $payment_type, $payment_method, $discount, $discount_total,
+    $custom_due_date;
+    
 
     //ESCUCHAS DE EVENTOS
     protected $listeners = [
@@ -372,6 +375,26 @@ class PosController extends Component
     
             // 📌 **Si la venta es a CRÉDITO, registrar el crédito en `sale_credits`**
             if ($this->payment_type == 'CREDITO') {
+
+                // Obtener cliente y deuda actual
+                $customer = Customer::find($this->customerId);
+
+                if (!$customer) {
+                    $this->emit('sale-error', 'Cliente no encontrado.');
+                    return;
+                }
+                
+                $currentCredit = SaleCredit::where('customer_id', $this->customerId)
+                    ->where('status', 'PENDIENTE')
+                    ->sum('remaining_balance');
+
+                $nuevoCredito = $this->total - $this->cash;
+
+                if (($currentCredit + $nuevoCredito) > $customer->credit_limit) {
+                    $this->emit('sale-error', 'El cliente ha superado su límite de crédito.');
+                    return;
+                }
+
                 // Calcular el saldo pendiente correctamente
                 $remainingBalance = round($this->total - $this->cash, 2);
     
@@ -382,6 +405,13 @@ class PosController extends Component
     
                 // Determinar el estado del crédito
                 $creditStatus = ($remainingBalance > 0) ? 'PENDIENTE' : 'PAGADO';
+
+                $dueDate = now()->addDays(30); // valor por defecto
+
+                // Si desde la vista se envía otra fecha, usala (esto requiere un nuevo campo público en el componente)
+                if ($this->custom_due_date) {
+                    $dueDate = $this->custom_due_date;
+                }
     
                 $credit = SaleCredit::create([
                     'sale_id' => $sale->id,
@@ -389,7 +419,8 @@ class PosController extends Component
                     'total_credit' => round($this->total, 2),
                     'amount_paid' => round($this->cash, 2), // Guardar lo que ya pagó el cliente
                     'remaining_balance' => round($remainingBalance, 2), // Registrar lo que falta por pagar
-                    'status' => $creditStatus
+                    'status' => $creditStatus,
+                    'due_date' => $dueDate
                 ]);
     
                 // **Registrar automáticamente el pago parcial si el cliente dio dinero**

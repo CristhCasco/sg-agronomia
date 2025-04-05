@@ -85,6 +85,14 @@
         </div>
     </div>
 
+    <div class="col-sm-12 col-md-4">
+        <div class="form-group">
+            <label>LÍMITE DE CRÉDITO</label>
+            <input wire:model.lazy="credit_limit" type="number" class="form-control" placeholder="ej: 1000000">
+            @error('credit_limit') <span class="text-danger er">{{ $message }}</span> @enderror
+        </div>
+    </div>
+
     <div class="col-sm-12 col-md-12">
         <div class="form-group custom-file">
             <input type="file" class="custom-file-input" wire:model="image"

@@ -30,7 +30,7 @@
 								<th class="table-th text-white text-center">CELULAR</th>
 								<th class="table-th text-white text-center">NACIMIENTO</th>
 								<th class="table-th text-white text-center">CORREO</th>
-								<th class="table-th text-white text-center">IMAGEN</th>
+								<th class="table-th text-white text-center">LIMITE CREDITO</th>
 								<th class="table-th text-white text-center">ACTIONS</th>
 							</tr>
 						</thead>
@@ -49,12 +49,15 @@
                                 <td><h6 class="text-center">{{$customers->birthday}}</h6></td>
                                 <td><h6 class="text-center">{{$customers->email}}</h6></td>
 							
-								<td class="text-center">
+								<!-- <td class="text-center">
 									<span>
 										<img src="{{ asset('storage/customers/' . $customers->image ) }}"
 										 alt="imagen de ejemplo" height="70" width="80" class="rounded">
 									</span>
-								</td>
+								</td> -->
+
+								<td><h6 class="text-center">{{ number_format($customers->credit_limit, 0, ',', '.') }}</h6></td>
+
 								
 
 								<td class="text-center">
