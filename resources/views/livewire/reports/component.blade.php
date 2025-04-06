@@ -46,6 +46,18 @@
                                             placeholder="Click para elegir" {{ $reportType==0 ? 'disabled' : '' }}>
                                     </div>
                                 </div>
+                                <div class="col-sm-12 mt-2">
+                                    <h6>Elige el cliente</h6>
+                                    <div class="form-group">
+                                        <select wire:model="customerId" class="form-control">
+                                            <option value="0">Todos</option>
+                                            @foreach(App\Models\Customer::orderBy('name')->get() as $c)
+                                                <option value="{{ $c->id }}">{{ $c->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div class="col-sm-12">
                                     <button wire:click="$refresh" class="btn btn-dark btn-block">
                                         Consultar
@@ -69,6 +81,7 @@
                                 <table class="table table-bordered table striped mt-1">
                                     <thead class="text-white" style="background: #620408">
                                         <tr>
+                                            <th class="table-th text-white text-center">CIENTE</th>
                                             <th class="table-th text-white text-center">TOTAL</th>
                                             <th class="table-th text-white text-center">ITEMS</th>
                                             <th class="table-th text-white text-center">ESTADO</th>
@@ -85,6 +98,10 @@
                                         @endif -->
                                         @forelse($data as $d)
                                         <tr>
+                                            <td class="text-center">
+                                                <h6>{{$d->customer}}</h6>
+                                            </td>
+
                                             <td class="text-center">
                                                 <h6>{{number_format($d->total,0)}} Gs.</h6>
                                             </td>

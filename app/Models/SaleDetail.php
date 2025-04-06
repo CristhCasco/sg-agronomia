@@ -10,7 +10,7 @@ class SaleDetail extends Model
     use HasFactory;
 
     //protected $fillable = [ 'price', 'quantity','sub_total', 'product_id', 'sale_id' ];
-    protected $fillable = ['sale_id', 'product_id', 'quantity', 'weight', 'price', 'sub_total'];
+    protected $fillable = ['sale_id', 'product_id', 'quantity', 'weight', 'price', 'sub_total', 'manual_discount'];
 
     public function sale()
     {

@@ -72,12 +72,51 @@
                                                </a>
                                            </td>
                                            
-                                            <td class="text-center">
-                                                {{number_format($item['price'], 0)}} Gs.
+                                           <td class="text-center align-middle">
+                                                @php
+                                                    $precioBase = floatval($item['price']);
+                                                    $descuento = isset($item['manual_discount']) ? floatval($item['manual_discount']) : 0;
+                                                    $precioFinal = max($precioBase - $descuento, 0);
+                                                @endphp
+
+                                                <div>
+                                                    <strong style="font-size: 0.9rem;">{{ number_format($precioFinal, 0) }} Gs.</strong>
+                                                    @if($descuento > 0)
+                                                        <br><small class="text-success" style="font-size: 0.75rem;">-{{ number_format($descuento, 0) }} Gs</small>
+                                                    @endif
+                                                </div>
+
+                                                <div class="mt-1">
+                                                    <button class="btn btn-sm btn-light border px-2 py-0"
+                                                            wire:click="toggleDiscountInput({{ $item['id'] }})"
+                                                            style="font-size: 0.9rem; line-height: 1;">
+                                                        @if(!($showDiscountInput[$item['id']] ?? false))
+                                                            ➕
+                                                        @else
+                                                            ✖
+                                                        @endif
+                                                    </button>
+                                                </div>
+
+                                                @if($showDiscountInput[$item['id']] ?? false)
+                                                    <div class="mt-1">
+                                                        <input type="number"
+                                                        wire:change="updateManualDiscount({{ $item['id'] }}, $event.target.value)"
+                                                        class="form-control form-control-sm text-center"
+                                                        placeholder="Descuento"
+                                                        value="{{ $item['manual_discount'] ?? '' }}">
+                                                    </div>
+                                                @endif
                                             </td>
+
+
+
+
+
                                             <td class="text-center">
-                                                {{number_format($item['price'] * $item['quantity'], 0)}} Gs.
+                                                {{ number_format($precioFinal * $item['quantity'], 0) }} Gs.
                                             </td>
+
                                             <td class="text-center">
                                             <button wire:click="removeItem({{ $item['id'] }})" class="btn btn-dark btn-sm mbmobile">
                                                     <i class="fas fa-trash-alt"></i>

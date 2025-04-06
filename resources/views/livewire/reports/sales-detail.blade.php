@@ -22,15 +22,43 @@
             </thead>
             <tbody>
               @foreach($details as $d)
-              <tr>
-                <td class='text-center'><h6>{{$d->id}}</h6></td>
-                <td class='text-center'><h6>{{$d->product}}</h6></td>
-                <td class='text-center'><h6>{{number_format($d->price,0)}} Gs.</h6></td>
-                <td class='text-center'><h6>{{number_format($d->quantity,0)}}</h6></td>
-                <td class='text-center'><h6>{{number_format($d->price * $d->quantity,0)}} Gs.</h6></td>               
-                
-              </tr>
-              @endforeach
+                <tr>
+                  <td class='text-center'><h6>{{ $d->id }}</h6></td>
+                  <td class='text-center'><h6>{{ $d->product }}</h6></td>
+
+                  @php
+                    $precioBase = floatval($d->price);
+                    $descuento = floatval($d->manual_discount ?? 0);
+                    $precioFinal = max($precioBase - $descuento, 0);
+                  @endphp
+
+                  <!-- PRECIO -->
+                  <td class='text-center'>
+                    @if($descuento > 0)
+                      <div>
+                        <small class="text-muted" style="text-decoration: line-through;">
+                          {{ number_format($precioBase, 0) }} Gs.
+                        </small><br>
+                        <strong class="text-success">
+                          {{ number_format($precioFinal, 0) }} Gs.
+                        </strong><br>
+                        <small class="text-success">-{{ number_format($descuento, 0) }} Gs.</small>
+                      </div>
+                    @else
+                      <h6>{{ number_format($precioBase, 0) }} Gs.</h6>
+                    @endif
+                  </td>
+
+                  <!-- CANTIDAD -->
+                  <td class='text-center'><h6>{{ number_format($d->quantity, 0) }}</h6></td>
+
+                  <!-- IMPORTE -->
+                  <td class='text-center'>
+                    <h6>{{ number_format($precioFinal * $d->quantity, 0) }} Gs.</h6>
+                  </td>
+                </tr>
+                @endforeach
+
             </tbody>
             <tfoot>
               <tr>
@@ -40,6 +68,17 @@
                   {{number_format($sumDetails,0)}} Gs.
                 </h5></td>
               </tr>
+              <tr>
+                <td colspan="4" class="text-right">
+                  <h6 class="text-success font-weight-bold">Total Descuento</h6>
+                </td>
+                <td class="text-center">
+                  <h6 class="text-success font-weight-bold">
+                    {{ number_format($ahorroTotal, 0) }} Gs.
+                  </h6>
+                </td>
+              </tr>
+
             </tfoot>
           </table>         
         </div>

@@ -29,6 +29,8 @@ class PosController extends Component
     public $total, $cash, $change, $customers = [], $customerId,
     $customerName, $status, $payment_type, $payment_method, $discount, $discount_total,
     $custom_due_date;
+    public $showDiscountInput = [];
+
     
 
     //ESCUCHAS DE EVENTOS
@@ -228,17 +230,19 @@ class PosController extends Component
     }
 
     public function updateCart()
-{
-    // Guarda el carrito en sesión
-    session(['posCart' => $this->posCart]);
+    {
+        session(['posCart' => $this->posCart]);
 
-    // Actualiza el total y la cantidad de ítems
-    $this->total = $this->posCart->sum(function ($item) {
-        return $item['price'] * $item['quantity'];
-    });
+        $this->total = round($this->posCart->sum(function ($item) {
+            $precioBase = floatval($item['price']);
+            $descuento = isset($item['manual_discount']) ? floatval($item['manual_discount']) : 0;
+            $precioFinal = max($precioBase - $descuento, 0);
+            return $precioFinal * $item['quantity'];
+        }), 2);
 
-    $this->itemsQuantity = $this->posCart->sum('quantity');
-}
+        $this->itemsQuantity = $this->posCart->sum('quantity');
+    }
+    
 
     public function inCart($product_id)
     {
@@ -297,9 +301,11 @@ class PosController extends Component
     public function clearCart()
     {
         $this->posCart = collect([]);
+        $this->showDiscountInput = [];
         $this->save();
         $this->emit('scan-ok', 'Carrito vaciado');
     }
+
 
 
 
@@ -311,16 +317,20 @@ class PosController extends Component
         //Log::info(json_encode($this->posCart));
     }
 
-        public function totalCart()
+    public function totalCart()
     {
         if ($this->posCart === null) {
             $this->posCart = collect([]);
         }
-
+    
         return round($this->posCart->sum(function ($item) {
-            return round(floatval($item['price']), 2) * round(floatval($item['quantity']), 3);
+            $precioBase = floatval($item['price']);
+            $descuento = isset($item['manual_discount']) ? floatval($item['manual_discount']) : 0;
+            $precioFinal = max($precioBase - $descuento, 0);
+            return round($precioFinal * floatval($item['quantity']), 2);
         }), 2);
     }
+    
 
     public function totalItems()
     {
@@ -439,10 +449,14 @@ class PosController extends Component
                 SaleDetail::create([
                     'price' => $item['price'],
                     'quantity' => $item['quantity'],
-                    'sub_total' => $item['price'] * $item['quantity'],
+                    'sub_total' => $this->calcularPrecioFinal($item) * $item['quantity'],
+                    'manual_price' => $item['manual_price'] ?? null,
+                    'manual_discount' => $item['manual_discount'] ?? null,
+                    'manual_discount_percent' => $item['manual_discount_percent'] ?? null,
                     'product_id' => $item['id'],
                     'sale_id' => $sale->id
                 ]);
+                
     
                 // 📌 **Actualizar el stock**
                 $product = Product::find($item['id']);
@@ -483,7 +497,9 @@ class PosController extends Component
         $this->total = $this->totalCart();
         $this->itemsQuantity = $this->totalItems();
         $this->payment_type = 'CONTADO'; // Restablecer a 'CONTADO'
+        $this->showDiscountInput = [];
         $this->emit('sale-ok', 'Venta realizada');
+       
     }
 
     public function setCustomer($customerId, $customerName)
@@ -509,56 +525,45 @@ class PosController extends Component
         $this->increaseQty($productId);
     }
 
+    // =======================
+    // 🔸 DESCUENTOS MANUALES
+    // =======================
 
+    public function updateManualDiscount($productId, $value)
+    {
+        $this->posCart = $this->posCart->map(function ($item) use ($productId, $value) {
+            if ($item['id'] === $productId) {
+                $item['manual_discount'] = floatval($value);
+                $precioFinal = max($item['price'] - floatval($value), 0);
+                $item['total'] = $precioFinal * $item['quantity'];
+            }
+            return $item;
+        });
+    
+        $this->updateCart();
+        $this->emit('scan-ok', 'Descuento aplicado');
+    }    
 
-    // public function increaseQty($productId, $cant = 1)
-    // {
-    //     if (!$productId) {
-    //         $this->emit('no-stock', 'ID de producto no válido');
-    //         return;
-    //     }
-    
-    //     $product = Product::find($productId);
-    //     if (!$product) {
-    //         $this->emit('no-stock', 'Producto no encontrado');
-    //         return;
-    //     }
-    
-    //     $exist = $this->posCart->firstWhere('id', $productId);
-    
-    //     if ($exist) {
-    //         if ($product->stock < ($cant + $exist['quantity'])) {
-    //             $this->emit('no-stock', 'Stock insuficiente para "' . $product->name . '"');
-    //             return;
-    //         }
-    
-    //         // Actualiza la cantidad en el carrito
-    //         $exist['quantity'] += $cant;
-    //         $exist['total'] = $exist['quantity'] * $exist['price'];
-    
-    //         $this->posCart = $this->posCart->map(function ($item) use ($exist) {
-    //             return $item['id'] === $exist['id'] ? $exist : $item;
-    //         });
-    //     } else {
-    //         if ($product->stock < $cant) {
-    //             $this->emit('no-stock', 'Stock insuficiente para "' . $product->name . '"');
-    //             return;
-    //         }
-    
-    //         // Agrega el producto al carrito si no existe
-    //         $this->posCart->push([
-    //             'id' => $product->id,
-    //             'barcode' => $product->barcode,
-    //             'name' => $product->name,
-    //             'quantity' => $cant,
-    //             'price' => $product->price,
-    //             'total' => $product->price * $cant,
-    //         ]);
-    //     }
-    
-    //     $this->updateCart();
-    //     $this->emit('scan-ok', $exist ? 'Cantidad actualizada' : 'Producto agregado al carrito');
-    // }
+    private function calcularPrecioFinal($item)
+    {
+        $precioBase = floatval($item['price']);
+
+        if (isset($item['manual_price'])) {
+            return floatval($item['manual_price']);
+        }
+
+        if (isset($item['manual_discount'])) {
+            return max($precioBase - floatval($item['manual_discount']), 0);
+        }
+
+        if (isset($item['manual_discount_percent'])) {
+            $descuento = $precioBase * (floatval($item['manual_discount_percent']) / 100);
+            return max($precioBase - $descuento, 0);
+        }
+
+        return $precioBase;
+    }
+
 
         public function increaseQty($productId, $cant = 1)
     {
@@ -643,6 +648,12 @@ public function decreaseQty($productId)
         $this->emit('scan-notfound', 'El producto no está en el carrito');
     }
 }
+
+public function toggleDiscountInput($productId)
+{
+    $this->showDiscountInput[$productId] = !($this->showDiscountInput[$productId] ?? false);
+}
+
 
 
 
