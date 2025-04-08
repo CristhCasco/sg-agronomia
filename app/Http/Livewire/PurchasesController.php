@@ -33,6 +33,8 @@ class PurchasesController extends Component
     public $totalItems = 0; // popiedad para guardar la cantidad de productos agregados al carrito
     public $total, $itemsQuantity, $efectivo, $change, $price, $suppliers = [], $supplierId, $supplierName,
         $status, $payment_type, $payment_method, $discount, $discount_total;
+    public $margen_ganancia = 30; // Valor por defecto del 30%
+
 
     function mount()
     {
@@ -357,13 +359,25 @@ class PurchasesController extends Component
             foreach ($this->carrito as $item) {
 
                 PurchaseDetail::create([
-                    'price' => $item['cost'], 'quantity' => $item['qty'], 'product_id' => $item['id'],
+                    'price' => $item['cost'],
+                    'quantity' => $item['qty'],
+                    'product_id' => $item['id'],
                     'purchase_id' => $purchase->id,
                     'total' => $item['total']
                 ]);
 
                 $product = Product::find($item['id']);
                 $product->stock = $product->stock + $item['qty'];
+                $product->cost = $item['cost']; // ← Actualiza el precio de compra
+
+                // Aplicar el nuevo precio de venta según el margen ingresado
+                // Si viene margen por producto
+                if (isset($item['margen']) && is_numeric($item['margen']) && $item['margen'] >= 0) {
+                    $ganancia = $item['cost'] * ($item['margen'] / 100);
+                    $nuevoPrecioVenta = round($item['cost'] + $ganancia, 2);
+                    $product->price = $nuevoPrecioVenta;
+                }
+
                 $product->save();
 
                 //Product::where('id', $item['id'])->increment('stock',  $item['qty']);
@@ -379,6 +393,8 @@ class PurchasesController extends Component
             $this->dispatchBrowserEvent('purchase-ok', ['msg' => 'Compra Registrada']);
 
             $this->resetSupplier();
+            $this->mostrarResumen = false;
+
 
             //
         } catch (\Throwable $th) {
@@ -404,4 +420,61 @@ class PurchasesController extends Component
         $this->supplierId = '';
         $this->supplierName = '';
     }
+
+    public function updateCost($id, $cost)
+    {
+        foreach ($this->carrito as $index => $item) {
+            if ($item['id'] == $id) {
+                $this->carrito[$index]['cost'] = is_numeric($cost) ? floatval($cost) : 0;
+                $this->carrito[$index]['total'] = round($this->carrito[$index]['qty'] * $this->carrito[$index]['cost'], 2);
+
+                // Guarda apenas se modifica
+                session()->put('carrito', $this->carrito);
+                session()->save();
+
+                break;
+            }
+        }
+
+        $this->totalCarrito = $this->totalCart();
+        $this->totalItems = $this->totalItems();
+
+        $this->emit('purchase-ok', 'Costo actualizado automáticamente');
+    }
+
+    public function updatedCarrito($value, $key)
+    {
+        [$index, $field] = explode('.', $key);
+
+        if (!isset($this->carrito[$index])) return;
+
+        $item = $this->carrito[$index];
+
+        $item['qty'] = isset($item['qty']) && is_numeric($item['qty']) ? floatval($item['qty']) : 1;
+        $item['cost'] = isset($item['cost']) && is_numeric($item['cost']) ? floatval($item['cost']) : 0;
+        $item['total'] = round($item['qty'] * $item['cost'], 2);
+
+        $this->carrito[$index] = $item;
+
+        // Guardar en la sesión SIEMPRE
+        session()->put('carrito', $this->carrito);
+        session()->save();
+
+        $this->totalCarrito = $this->totalCart();
+        $this->totalItems = $this->totalItems();
+
+        $this->emit('purchase-ok', 'Producto actualizado automáticamente');
+    }
+
+
+    public $mostrarResumen = false;
+
+    public function confirmarResumen()
+    {
+        $this->mostrarResumen = true;
+    }
+
+
+
+
 }

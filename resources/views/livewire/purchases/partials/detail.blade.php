@@ -1,6 +1,36 @@
 <div>
+    <style>
+        thead tr {
+            background-color: #620408 !important;
+            color: #fff !important;
+        }
+
+        th {
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f2f2f2;
+        }
+
+        .tblscroll {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .tblscroll thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
+
 
     <div class="connect-sorting mb-2">
+     
+
         <div class="container text-center">
             <div class="row">
                 <div class="col-lg-6 col-md-12 mb-3">
@@ -30,115 +60,95 @@
         </div>
     </div>
 
-
     <div class="connect-sorting">
         <div class="connect-sorting-content">
             <div class="card simple-title-task ui-sortable-handle">
                 <div class="card-body">
 
-                    @if($totalCarrito > 0)
+                @if($totalCarrito > 0)
                     <div class="table-responsive tblscroll">
+                        <table class="table bordered table-striped mt-1">
+                        <thead style="background-color: #620408;">
+                            <tr>
+                                <th style="color: white; font-weight: bold; text-align: center;">CANTIDAD</th>
+                                <th style="color: white; font-weight: bold; text-align: left;">DESCRIPCIÓN</th>
+                                <th style="color: white; font-weight: bold; text-align: center;">COSTO</th>
+                                <th style="color: white; font-weight: bold; text-align: center;">SUBTOTAL</th>
+                                <th style="color: white; font-weight: bold; text-align: center;">MARGEN %</th>
+                                <th style="color: white; font-weight: bold; text-align: center;">NUEVO PRECIO</th>
+                                <th style="color: white; font-weight: bold; text-align: center;">ACCIONES</th>
+                            </tr>
+                        </thead>
 
-                        <table class="table bordered table-strped mt-1">
-                            <thead class="text-white" style="background: #620408">
-                                <tr>
-                                    <th width="10%"></th>
-                                    <th width="13%" class="table-th text-center text-white">CANTIDAD</th>
-                                    <th class="table-th text-left text-white">DESCRIPCION</th>
-                                    <th width="20%" class="table-th text-center text-white">COSTO</th>
-                                    <th class="table-th text-center text-white">SUB TOTAL</th>
-                                    <th class="table-th text-center text-white">ACCIONES</th>
-                                </tr>
-                            </thead>
+
 
                             <tbody>
-                                @foreach($carrito as $item)
-                                <tr>
+                                @foreach($carrito as $index => $item)
+                                    @php
+                                        $nuevoPrecio = $item['cost'] * (1 + ($item['margen'] ?? 0) / 100);
+                                    @endphp
+                                    <tr>
+                                        {{-- Cantidad --}}
+                                        <td>
+                                            <input type="number"
+                                                class="form-control text-center"
+                                                wire:model.lazy="carrito.{{ $index }}.qty"
+                                                wire:change="UpdateQty({{ $item['id'] }}, carrito.{{ $index }}.qty)">
+                                        </td>
 
-                                    <td class="text-center table-th">
+                                        {{-- Descripción --}}
+                                        <td>
+                                            <h6>{{ $item['name'] }}</h6>
+                                        </td>
 
-                                        <span>
-                                            <img src="{{ asset('storage/products/' . $item['image']) }}"
-                                                alt="imagen de producto" width="50" class="rounded">
-                                        </span>
+                                        {{-- Costo --}}
+                                        <td class="text-center">
+                                            <input type="number"
+                                                step="0.01"
+                                                class="form-control text-center"
+                                                wire:model.lazy="carrito.{{ $index }}.cost"
+                                                wire:change="updateCost({{ $item['id'] }}, carrito.{{ $index }}.cost)">
+                                        </td>
 
-                                    </td>
+                                        {{-- Subtotal --}}
+                                        <td class="text-center">
+                                            <h6>{{ number_format($item['cost'] * $item['qty'], 0, ',', '.') }} Gs.</h6>
+                                        </td>
 
-                                    <td>
-                                        <input type="number" id="r{{$item['id']}}"
-                                            wire:keydown.enter.prevent="Increment({{$item['id']}}, $event.target.value, true )"
-                                            wire:change="UpdateQty({{$item['id']}}, $event.target.value )"
-                                            style="font-size: 1rem!important" class="form-control text-center"
-                                            value="{{$item['qty']}}">
-                                    </td>
+                                        {{-- Margen --}}
+                                        <td class="text-center">
+                                            <input type="number"
+                                                step="0.01"
+                                                class="form-control text-center"
+                                                wire:model.lazy="carrito.{{ $index }}.margen">
+                                        </td>
 
+                                        {{-- Nuevo Precio Venta --}}
+                                        <td class="text-center">
+                                            <h6 class="{{ $nuevoPrecio < (\App\Models\Product::find($item['id'])->price ?? 0) ? 'text-danger font-weight-bold' : '' }}">
+                                                {{ number_format($nuevoPrecio, 0, ',', '.') }} Gs.
+                                            </h6>
+                                        </td>
 
-                                    <!--PARA QUE NO SE ACTUALICE EL VALOR DEL INPUT CUANDO SE AGREGA UN PRODUCTO
+                                        {{-- Acciones --}}
+                                        <td class="text-center">
+                                            <button onclick="Confirm('{{ $item['id'] }}', 'removeItem', 'CONFIRMAS ELIMINAR EL REGISTRO?')" class="btn btn-dark mbmobile">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
 
-                                        @if(is_object($item) && property_exists($item, 'quantity'))
-                                            <input type="number" id="r{{$item->id}}"
-                                                wire:change="updateQty({{$item->id}}, $('#r' + {{$item->id}}). val() )"
-                                                style="font-size: 1rem!important"
-                                                class="form-control text-center" 
-                                                value="{{$item->quantity}}"
-                                            >
-                                        @endif
-
-                                        -->
-
-                                    <td>
-                                        <h6>{{$item['name']}}</h6>
-                                    </td>
-
-
-
-                                    <td class="text-center">
-                                        <input
-                                            wire:keydown.enter.prevent="setCost({{$item['id']}}, $event.target.value, true )"
-                                            type="number" class="form-control text-center"
-                                            value="{{ intval($item['cost'] )}}">
-
-
-                                    </td>
-
-                                    <!--
-                                    <td class="text-center">
-                                        <input type="number" value="{{ $item['cost'] }}" wire:model="items.{{ $item['id'] }}.cost" class="form-control" />
-                                    </td>
-                                    -->
-
-                                    <td class="text-center">
-                                        <h6>
-                                            {{number_format($item['cost'] * $item['qty'])}} Gs.
-                                        </h6>
-                                    </td>
-                                    <td class="text-center">
-
-                                        <button
-                                            onclick="Confirm('{{$item['id']}}', 'removeItem', 'CONFIRMAS ELIMINAR EL REGISTRO?' )"
-                                            class="btn btn-dark mbmobile">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-
-
-
-                                        <button wire:click.prevent="Increment({{$item['id']}})"
-                                            class="btn btn-dark mbmobile">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-
-
-                                    </td>
-                                </tr>
+                                            <button wire:click.prevent="Increment({{ $item['id'] }})" class="btn btn-dark mbmobile">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
                                 @endforeach
                             </tbody>
-
-
                         </table>
                     </div>
-                    @else
-                    <h5 class="text-center text-muted">Agrega Productos a la compra</h5>
-                    @endif
+                @else
+                    <h5 class="text-center text-muted">Agrega productos a la compra</h5>
+                @endif
+
                 </div>
 
                 <div wire:loading.inline wire:target="saveSale">

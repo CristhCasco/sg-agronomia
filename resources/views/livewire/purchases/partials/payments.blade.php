@@ -29,12 +29,59 @@
                     </div>
 
                     <div class="col-sm-12 mt-2">
-                        <button wire:click.prevent="savePurchase" class="btn btn-primary btn-block" {{ $totalCarrito==0
-                            ? 'disabled' : '' }}>
-                            Save Purchase F3
-                        </button>
+                    <button wire:click.prevent="confirmarResumen" class="btn btn-secondary"
+                     {{ $totalCarrito == 0 ? 'disabled' : '' }}>Guardar</button>
+
                     </div>
                 </div>
+                @if($mostrarResumen)
+                    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(0,0,0,0.5)">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header bg-dark text-white">
+                                    <h5 class="modal-title">Resumen de Compra</h5>
+                                    <button type="button" class="close" wire:click="$set('mostrarResumen', false)">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr style="background-color: #620408;">
+                                                <th style="color: white; font-weight: bold;">Producto</th>
+                                                <th style="color: white; font-weight: bold;">Cantidad</th>
+                                                <th style="color: white; font-weight: bold;">Costo</th>
+                                                <th style="color: white; font-weight: bold;">Margen %</th>
+                                                <th style="color: white; font-weight: bold;">Nuevo Precio Venta</th>
+                                                <th style="color: white; font-weight: bold;">Precio actual</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            @foreach($carrito as $item)
+                                                <tr>
+                                                    <td>{{ $item['name'] }}</td>
+                                                    <td>{{ $item['qty'] }}</td>
+                                                    <td>{{ number_format($item['cost'], 0, ',', '.') }} Gs.</td>
+                                                    <td>{{ $item['margen'] ?? 0 }}%</td>
+                                                    <td>{{ number_format($item['cost'] * (1 + ($item['margen'] ?? 0) / 100), 0, ',', '.') }} Gs.</td>
+                                                    <td>
+                                                        {{ number_format(\App\Models\Product::find($item['id'])->price ?? 0, 0, ',', '.') }} Gs.
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="modal-footer">
+                                    <button wire:click.prevent="savePurchase" class="btn btn-success">Confirmar Compra</button>
+                                    <button wire:click="$set('mostrarResumen', false)" class="btn btn-secondary">Cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
             </div>
         </div>
     </div>
