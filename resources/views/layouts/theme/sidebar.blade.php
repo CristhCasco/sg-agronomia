@@ -67,12 +67,12 @@
                     <ul class="submenu">
                         <li>
                             <a href="{{ url('credits/sales') }}">
-                                <span>VENTAS</span>
+                                <span>-VENTAS</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ url('credits/purchases') }}">
-                                <span>COMPRAS</span>
+                                <span>-COMPRAS</span>
                             </a>
                         </li>
                     </ul>
@@ -221,7 +221,7 @@
 
     /* Hover del menú principal */
     .menu-categories > li > a:hover {
-        background-color: #2a2a2a;
+        background-color:rgb(42, 42, 42);
         border-radius: 5px;
     }
 

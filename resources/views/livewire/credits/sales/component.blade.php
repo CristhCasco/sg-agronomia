@@ -4,7 +4,7 @@
             <div class="widget widget-chart-one">
                 <div class="widget-heading">
                     <h4 class="cart-title text-center">
-                        <h3>Gestión de Créditos y Pagos</h3>
+                        <h3>Gestión de Créditos de Ventas</h3>
                     </h4>
                 </div>
 
