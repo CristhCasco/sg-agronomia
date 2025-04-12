@@ -67,12 +67,12 @@
                     <ul class="submenu">
                         <li>
                             <a href="{{ url('credits/sales') }}">
-                                <span>Ventas a Crédito</span>
+                                <span>VENTAS</span>
                             </a>
                         </li>
                         <li>
                             <a href="{{ url('credits/purchases') }}">
-                                <span>Compras a Crédito</span>
+                                <span>COMPRAS</span>
                             </a>
                         </li>
                     </ul>
@@ -207,3 +207,64 @@
 </div>
 
 <div id="compact_submenuSidebar" class="submenu-sidebar" style="display: none!important"> </div>
+
+
+<style>
+    
+    .menu-categories > li > a {
+    color: #fff;
+    display: block;
+    padding: 10px 15px;
+    font-size: 15px;
+    transition: background 0.3s ease;
+    }
+
+    /* Hover del menú principal */
+    .menu-categories > li > a:hover {
+        background-color: #2a2a2a;
+        border-radius: 5px;
+    }
+
+    /* Ocultar el submenu por defecto */
+    ul.submenu {
+        display: none;
+        padding-left: 20px;
+    }
+
+    /* Mostrar submenu cuando el li tiene clase "open" */
+    li.open > ul.submenu {
+        display: block;
+    }
+
+    ul.submenu li a {
+    color: #fff;
+    padding: 8px 15px;
+    display: block;
+    font-size: 14px;
+    transition: background 0.3s ease;
+    }
+
+    ul.submenu li a:hover {
+        background-color: #2a2a2a; /* Cambia este color si querés otro fondo */
+        border-radius: 5px;
+    }
+
+    /* ul.submenu li a:hover span {
+    color: #ffd700; /* Ejemplo: dorado al pasar el mouse */
+    } */
+
+
+
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Buscar todos los toggles del menú
+        document.querySelectorAll('.menu-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function (e) {
+                const parentLi = this.closest('li');
+                parentLi.classList.toggle('open');
+            });
+        });
+    });
+</script>

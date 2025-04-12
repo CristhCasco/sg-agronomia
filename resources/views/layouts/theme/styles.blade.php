@@ -85,6 +85,26 @@
     border-right: 1px solid rgba(92, 26, 195, 0.14);
 }
 
+    /* Aumentar tamaño del texto y el padding de los submenús */
+    .sidebar-wrapper .submenu li a {
+        font-size: 16px !important; /* Antes 14px */
+        padding: 12px 20px !important; /* Más espacio para mejor visibilidad */
+        color: #ffffff !important;
+    }
+
+    /* Aumentar el alto mínimo del contenedor para mayor clicabilidad */
+    .sidebar-wrapper .submenu {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    /* Opcional: espaciado entre los ítems del submenú */
+    .sidebar-wrapper .submenu li {
+        margin-bottom: 6px;
+    }
+
+
+
 
 
 </style>
