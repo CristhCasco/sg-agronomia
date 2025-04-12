@@ -25,6 +25,7 @@ use App\Http\Livewire\SuppliersController;
 use App\Http\Livewire\CategoriesController;
 use App\Http\Livewire\SaleCreditsController;
 use App\Http\Livewire\DenominationsController;
+use App\Http\Livewire\PurchasesCreditsController;
 use App\Http\Controllers\inventory\Imports\InventoryController;
 
 
@@ -65,7 +66,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get("pos", PosController::class)->name('pos');
     Route::get("purchases", PurchasesController::class)->name('purchases');
     Route::get('/credits/sales', SaleCreditsController::class)->name('sale-credits');
-    // //Route::get('/creditos/compras', PurchaseCreditsController::class)->name('purchase-credits');
+    Route::get('/credits/purchases', PurchasesCreditsController::class)->name('purchase-credits');
 
 
     Route::group(['middleware' => ['role:admin']], function () {

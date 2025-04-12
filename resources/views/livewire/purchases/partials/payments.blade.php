@@ -28,6 +28,15 @@
                         @error('payment_method') <span class="text-danger er">{{ $message }}</span> @enderror
                     </div>
 
+                    @if($payment_type == 'CREDITO')
+                        <div class="col-sm-6 form-group text-center">
+                            <label>Fecha de Vencimiento</label>
+                            <input type="date" wire:model="due_date" class="form-control">
+                            @error('due_date') <span class="text-danger er">{{ $message }}</span> @enderror
+                        </div>
+                    @endif
+
+
                     <div class="col-sm-12 mt-2">
                     <button wire:click.prevent="confirmarResumen" class="btn btn-secondary"
                      {{ $totalCarrito == 0 ? 'disabled' : '' }}>Guardar</button>

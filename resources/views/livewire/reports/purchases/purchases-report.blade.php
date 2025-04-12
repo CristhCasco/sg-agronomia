@@ -10,78 +10,12 @@
                 </div>
                 <div class="widget-content">
                     <div class="row">
-                        <div class="col-sm-12 col-md-3">
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <h6>Elige el usuario</h6>
-                                    <div class="form-group">
-                                        <select wire:model="userId" class="form-control">
-                                            <option value="0">Todos</option>
-                                            @foreach($users as $user)
-                                            <option value="{{$user->id}}">{{$user->name}}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-12">
-                                    <h6>Elige el tipo de reporte</h6>
-                                    <div class="form-group">
-                                        <select wire:model="reportType" class="form-control">
-                                            <option value="0">Ventas del día</option>
-                                            <option value="1">Ventas por fecha</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-sm-12 mt-2">
-                                    <h6>Fecha desde {{$dateFrom}}</h6>
-                                    <div class="form-group">
-                                        <input type="text" wire:model="dateFrom" class="form-control flatpickr"
-                                            placeholder="Click para elegir" {{ $reportType==0 ? 'disabled' : '' }}>
-                                    </div>
-                                </div>
-                                <div class="col-sm-12 mt-2">
-                                    <h6>Fecha hasta {{ $dateTo}}</h6>
-                                    <div class="form-group">
-                                        <input type="text" wire:model="dateTo" class="form-control flatpickr"
-                                            placeholder="Click para elegir" {{ $reportType==0 ? 'disabled' : '' }}>
-                                    </div>
-                                </div>
-                                <div class="col-sm-12 mt-2">
-                                    <h6>Elige el cliente</h6>
-                                    <div class="form-group">
-                                        <select wire:model="customerId" class="form-control">
-                                            <option value="0">Todos</option>
-                                            @foreach(App\Models\Customer::orderBy('name')->get() as $c)
-                                                <option value="{{ $c->id }}">{{ $c->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="col-sm-12">
-                                    <button wire:click="$refresh" class="btn btn-dark btn-block">
-                                        Consultar
-                                    </button>
-                                    <a class="btn btn-dark btn-block {{count($data) <1 ? 'disabled' : '' }}"
-                                        href="{{ url('report/pdf' . '/' . $userId . '/' . $reportType . '/' . $dateFrom . '/' . $dateTo) }}"
-                                        target="_blank">Generar PDF</a>
-
-
-                                    <!--
-                                    <a class="btn btn-dark btn-block {{count($data) <1 ? 'disabled' : '' }}" 
-                                    href="{{ url('report/excel' . '/' . $userId . '/' . $reportType . '/' . $dateFrom . '/' . $dateTo) }}" 
-                                    target="_blank">Exportar a Excel</a>
-                                    -->
-                                </div>
-                            </div>
-                        </div>
                         <div class="col-12 col-md-9">
                             <!--TABLAE-->
                             <div class="table-responsive">
                                 <table class="table table-bordered table striped mt-1">
                                     <thead class="text-white" style="background: #620408">
                                         <tr>
-                                            <th class="table-th text-white text-center">CIENTE</th>
                                             <th class="table-th text-white text-center">TOTAL</th>
                                             <th class="table-th text-white text-center">ITEMS</th>
                                             <th class="table-th text-white text-center">ESTADO</th>
@@ -98,10 +32,6 @@
                                         @endif -->
                                         @forelse($data as $d)
                                         <tr>
-                                            <td class="text-center">
-                                                <h6>{{$d->customer}}</h6>
-                                            </td>
-
                                             <td class="text-center">
                                                 <h6>{{number_format($d->total,0)}} Gs.</h6>
                                             </td>
@@ -156,11 +86,78 @@
                                 </table>
                             </div>
                         </div>
+
+                        <div class="col-sm-12 col-md-3">
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <h6>Filtrar por estado</h6>
+                                    <div class="form-group">
+                                        <select wire:model="statusFilter" class="form-control">
+                                            <option value="ALL">Todos</option>
+                                            <option value="PAGADO">Pagado</option>
+                                            <option value="PENDIENTE">Pendiente</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-sm-12">
+                                    <h6>Elige el usuario</h6>
+                                    <div class="form-group">
+                                        <select wire:model="userId" class="form-control">
+                                            <option value="0">Todos</option>
+                                            @foreach($users as $user)
+                                            <option value="{{$user->id}}">{{$user->name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12">
+                                    <h6>Elige el tipo de reporte</h6>
+                                    <div class="form-group">
+                                        <select wire:model="reportType" class="form-control">
+                                            <option value="0">Ventas del día</option>
+                                            <option value="1">Ventas por fecha</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 mt-2">
+                                    <h6>Fecha desde {{$dateFrom}}</h6>
+                                    <div class="form-group">
+                                        <input type="text" wire:model="dateFrom" class="form-control flatpickr"
+                                            placeholder="Click para elegir" {{ $reportType==0 ? 'disabled' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12 mt-2">
+                                    <h6>Fecha hasta {{ $dateTo}}</h6>
+                                    <div class="form-group">
+                                        <input type="text" wire:model="dateTo" class="form-control flatpickr"
+                                            placeholder="Click para elegir" {{ $reportType==0 ? 'disabled' : '' }}>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12">
+                                    <button wire:click="$refresh" class="btn btn-dark btn-block">
+                                        Consultar
+                                    </button>
+                                    @if($reportType == 0)
+                                    <a class="btn btn-dark btn-block {{count($data) <1 ? 'disabled' : '' }}"
+                                        href="{{ url('report/purchases/pdf' . '/' . $userId . '/' . $reportType ) }}"
+                                        target="_blank">Generar PDF</a>
+                                    @else
+                                    <a class="btn btn-dark btn-block {{count($data) <1 ? 'disabled' : '' }}"
+                                        href="{{ url('report/purchases/pdf' . '/' . $userId . '/' . $reportType . '/' . $dateFrom . '/' . $dateTo) }}"
+                                        target="_blank">Generar PDF.</a>
+                                    @endif
+
+
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
-        @include('livewire.reports.sales-detail')
+        @include('livewire.reports.purchases.purchases-detail')
     </div>
 
 

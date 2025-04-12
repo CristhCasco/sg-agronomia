@@ -12,4 +12,12 @@ class PurchaseDetail extends Model
     protected $fillable = [
          'price', 'quantity', 'product_id', 'purchase_id' ,'total'
         ];
+
+        // app/Models/PurchaseDetail.php
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
 }

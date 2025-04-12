@@ -15,6 +15,8 @@ class PurchasesReport extends Component
 
     public $componentName, $data, $details, $sumDetails, $countDetails,
         $reportType, $userId, $dateFrom, $dateTo, $purchaseId;
+    public $statusFilter = 'ALL';
+
 
     public function mount()
     {
@@ -33,7 +35,7 @@ class PurchasesReport extends Component
 
         $this->PurchasesByDate();
 
-        return view('livewire.purchases-report', [
+        return view('livewire.reports.purchases.purchases-report', [
             'users' => User::orderBy('name', 'asc')->get()
         ])->extends('layouts.theme.app')
             ->section('content');
@@ -41,35 +43,33 @@ class PurchasesReport extends Component
 
     public function PurchasesByDate()
     {
-        if ($this->reportType == 0) // compras del dia
-        {
-            $from = Carbon::parse(Carbon::now())->startOfDay(); // ->format('Y-m-d')->i . ' 00:00:00';
-            $to = Carbon::parse(Carbon::now())->endOfDay();     //->format('Y-m-d')   . ' 23:59:59';
+        if ($this->reportType == 0) {
+            $from = Carbon::now()->startOfDay();
+            $to = Carbon::now()->endOfDay();
         } else {
-            $from = Carbon::parse($this->dateFrom)->format('Y-m-d') . ' 00:00:00';
-            $to = Carbon::parse($this->dateTo)->format('Y-m-d')     . ' 23:59:59';
+            if ($this->dateFrom == '' || $this->dateTo == '') {
+                $this->data = [];
+                return;
+            }
+            $from = Carbon::parse($this->dateFrom)->startOfDay();
+            $to = Carbon::parse($this->dateTo)->endOfDay();
         }
 
+        $query = Purchase::join('users as u', 'u.id', 'purchases.user_id')
+            ->select('purchases.*', 'u.name as user')
+            ->whereBetween('purchases.created_at', [$from, $to]);
 
-
-        if ($this->reportType == 1 && ($this->dateFrom == '' || $this->dateTo == '')) {
-            $this->data = [];
-            return;
+        if ($this->userId != 0) {
+            $query->where('purchases.user_id', $this->userId);
         }
 
-        if ($this->userId == 0) {
-            $this->data = Purchase::join('users as u', 'u.id', 'purchases.user_id')
-                ->select('purchases.*', 'u.name as usuario')
-                ->whereBetween('purchases.created_at', [$from, $to])
-                ->get();
-        } else {
-            $this->data = Purchase::join('users as u', 'u.id', 'purchases.user_id')
-                ->select('purchases.id', 'purchases.total', 'purchases.items', 'purchases.status', 'u.name as usuario', 'purchases.created_at')
-                ->whereBetween('purchases.created_at', [$from, $to])
-                ->where('user_id', $this->userId)
-                ->get();
+        if ($this->statusFilter !== 'ALL') {
+            $query->where('purchases.status', $this->statusFilter);
         }
+
+        $this->data = $query->get();
     }
+
 
 
     public function getDetails($purchaseId)

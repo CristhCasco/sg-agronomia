@@ -40,7 +40,7 @@ class ReportsController extends Component
 
         $this->SalesByDate();
 
-        return view('livewire.reports.component', [
+        return view('livewire.reports.sales.component', [
             'users' => User::orderBy('name','asc')->get()
         ])->extends('layouts.theme.app')
         ->section('content');

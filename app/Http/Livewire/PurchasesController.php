@@ -34,6 +34,8 @@ class PurchasesController extends Component
     public $total, $itemsQuantity, $efectivo, $change, $price, $suppliers = [], $supplierId, $supplierName,
         $status, $payment_type, $payment_method, $discount, $discount_total;
     public $margen_ganancia = 30; // Valor por defecto del 30%
+    public $due_date;
+
 
 
     function mount()
@@ -315,93 +317,90 @@ class PurchasesController extends Component
     }
 
 
-    function savePurchase()
+    public function savePurchase()
     {
-
-        if ($this->payment_method == 'EFECTIVO') {
-            if (empty($this->efectivo) || strlen($this->efectivo) < 1 || !is_numeric($this->efectivo)) {
+        if ($this->payment_type == 'CONTADO' && $this->payment_method == 'EFECTIVO') {
+            if (empty($this->efectivo) || !is_numeric($this->efectivo) || $this->efectivo <= 0) {
                 $this->dispatchBrowserEvent('purchase-error', ['msg' => 'EL MONTO DEL EFECTIVO ES INVÁLIDO']);
                 return;
             }
         }
-
+    
         if ($this->supplierId == null) {
             $this->dispatchBrowserEvent('purchase-error', ['msg' => 'SELECCIONA EL PROVEEDOR']);
             return;
         }
-
+    
         DB::beginTransaction();
-
+    
         try {
-            //code...
-
-            $purchase = Purchase::create(
-                [
-                    //dd($this->subtotalCart()),
-                    'items' => $this->totalItems(),
-                    'sub_total' => round($this->subtotalCart(), 2),
-                    'total' =>  $this->totalCart(),
-                    'cash' => 0,
-                    'change' => 0,
-                    'status' => 'PAGADO',
-                    'payment_type' => $this->payment_type,
-                    'payment_method' => $this->payment_method,
-                    'discount' => 0,
-                    'discount_total' => 0,
-                    'supplier_id' => $this->supplierId,
-                    'user_id' => Auth()->user()->id
-                ]
-            );
-
-         
-
-
+            $status = $this->payment_type == 'CREDITO' ? 'PENDIENTE' : 'PAGADO';
+    
+            $purchase = Purchase::create([
+                'items'          => $this->totalItems(),
+                'sub_total'      => round($this->subtotalCart(), 2),
+                'total'          => $this->totalCart(),
+                'cash'           => 0,
+                'change'         => 0,
+                'status'         => $status,
+                'payment_type'   => $this->payment_type,
+                'payment_method' => $this->payment_method,
+                'due_date' => $this->payment_type == 'CREDITO' ? now()->addDays(30) : null,
+                'discount'       => 0,
+                'discount_total' => 0,
+                'supplier_id'    => $this->supplierId,
+                'user_id'        => auth()->id()
+            ]);
+    
             foreach ($this->carrito as $item) {
-
                 PurchaseDetail::create([
-                    'price' => $item['cost'],
-                    'quantity' => $item['qty'],
-                    'product_id' => $item['id'],
+                    'price'       => $item['cost'],
+                    'quantity'    => $item['qty'],
+                    'product_id'  => $item['id'],
                     'purchase_id' => $purchase->id,
-                    'total' => $item['total']
+                    'total'       => $item['total']
                 ]);
-
+    
                 $product = Product::find($item['id']);
-                $product->stock = $product->stock + $item['qty'];
-                $product->cost = $item['cost']; // ← Actualiza el precio de compra
-
-                // Aplicar el nuevo precio de venta según el margen ingresado
-                // Si viene margen por producto
+                $product->stock += $item['qty'];
+                $product->cost = $item['cost'];
+    
                 if (isset($item['margen']) && is_numeric($item['margen']) && $item['margen'] >= 0) {
                     $ganancia = $item['cost'] * ($item['margen'] / 100);
-                    $nuevoPrecioVenta = round($item['cost'] + $ganancia, 2);
-                    $product->price = $nuevoPrecioVenta;
+                    $product->price = round($item['cost'] + $ganancia, 2);
                 }
-
+    
                 $product->save();
-
-                //Product::where('id', $item['id'])->increment('stock',  $item['qty']);
             }
-
+    
+            // Crea el crédito desde la relación definida en el modelo
+            if ($this->payment_type === 'CREDITO') {
+                $purchase->credit()->create([
+                    'supplier_id'       => $this->supplierId,
+                    'total_credit'      => $this->totalCart(),
+                    'amount_paid'       => 0,
+                    'remaining_balance' => $this->totalCart(),
+                    'status'            => 'PENDIENTE',
+                ]);
+            }
+    
             DB::commit();
-
-
+    
             $this->clear();
             $this->efectivo = 0;
             $this->change = 0;
-
+    
             $this->dispatchBrowserEvent('purchase-ok', ['msg' => 'Compra Registrada']);
-
             $this->resetSupplier();
+            $this->resetPaymentInfo();
             $this->mostrarResumen = false;
-
-
-            //
+    
         } catch (\Throwable $th) {
-            $this->dispatchBrowserEvent('purchase-error', ['msg' => $th->getMessage()]);
             DB::rollback();
+            $this->dispatchBrowserEvent('purchase-error', ['msg' => $th->getMessage()]);
         }
     }
+    
 
     public function ACash($value)
     {
@@ -473,6 +472,16 @@ class PurchasesController extends Component
     {
         $this->mostrarResumen = true;
     }
+
+    public function resetPaymentInfo()
+{
+    $this->payment_type = 'CONTADO';
+    $this->payment_method = 'EFECTIVO';
+    $this->due_date = now()->addDays(30)->format('Y-m-d');
+    $this->efectivo = 0;
+    $this->change = 0;
+}
+
 
 
 
