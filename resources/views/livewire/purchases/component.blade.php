@@ -53,3 +53,10 @@
         </div>
     </div>
 </div>
+
+
+<script>
+    window.addEventListener('purchase-error', event => {
+        alert(event.detail); // Mostrará el mensaje emitido
+    });
+</script>

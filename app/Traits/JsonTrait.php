@@ -12,13 +12,6 @@ trait JsonTrait {
 
     function jsonData($sale_id) {
 
-        //venta - detalle -product - cliente -user
-
-        //"id":20,"items":1,"total":100000,"cash":100000,"change":0,"status":"PAGADO","payment_type":"CONTADO","payment_method":"EFECTIVO","discount":0,"discount_total":0,"user_id":1,"customer_id":1,"created_at":"2024-07-12T02:07:05.000000Z","updated_at":"2024-07-12T02:07:05.000000Z","customer":{"id":1,"person":"FISICA","name":"DESCONOCIDO","last_name":"NUN","ci":1,"company":"","ruc":"","address":"CDE","phone":"1","birthday":null,"email":null,"image":null,"created_at":"2023-12-12T12:22:30.000000Z","updated_at":"2023-12-12T23:23:35.000000Z"},"user":{"id":1,"name":"Admin","last_name":"Casco","ci":6560887,"user":"admin","email":"cristhian.casco@hotmail.com","phone":"0983668960","address":"CDE","profile":"Admin","status":"ACTIVO","image":"https:\/\/dummyimage.com\/200x150\/5c5756\/fff","email_verified_at":null,"created_at":"2023-12-12T12:19:08.000000Z","updated_at":"2023-12-12T12:26:41.000000Z"}}
-        //|[{"id":23,"price":100000,"quantity":1,"sub_total":100000,"sale_id":20,"product_id":169,"created_at":"2024-07-12T02:07:05.000000Z","updated_at":"2024-07-12T02:07:05.000000Z","name":"ADAPTADOR DE CORRIENTE USB 20W"}]
-        //|{"id":1,"person":"FISICA","name":"DESCONOCIDO","last_name":"NUN","ci":1,"company":"","ruc":"","address":"CDE","phone":"1","birthday":null,"email":null,"image":null,"created_at":"2023-12-12T12:22:30.000000Z","updated_at":"2023-12-12T23:23:35.000000Z"}
-        //|{"id":1,"name":"Admin","last_name":"Casco","ci":6560887,"user":"admin","email":"cristhian.casco@hotmail.com","phone":"0983668960","address":"CDE","profile":"Admin","status":"ACTIVO","image":"https:\/\/dummyimage.com\/200x150\/5c5756\/fff","email_verified_at":null,"created_at":"2023-12-12T12:19:08.000000Z","updated_at":"2023-12-12T12:26:41.000000Z"}
-
         $sale = Sale::find($sale_id);
 
         $detalle = SaleDetail::join('products as p', 'p.id', 'sale_details.product_id')
@@ -51,17 +44,6 @@ trait JsonTrait {
         // Ajusta la zona horaria después de recuperar el registro
         $sale->created_at = Carbon::parse($sale->created_at, 'UTC')->setTimezone('America/Asuncion');
 
-      
-        //dd($sale->created_at);
-        //Carbon::parse($sale->created_at)->toDateTimeString();
-        //dd(date_default_timezone_get());
-
-
-        //FILTRAR COLUMNAS DE TABLA DETALLES
-        // $detalle = $sale->details()->select('product_id','quantity','price')
-        // //TRAER LA RELACION DEL MODEL DE DETALLE DE VENTA CON EL ID DE PRODUCTO LE DIGO QUE ME TRAIGA SU NOMBRE ('RELACION:IDENTIFICADOR,NOMBRE')
-        // ->with('product:id,name')
-        // ->get();
         
         $detalle = $sale->details()
         ->select('product_id', 'quantity', 'price', 'sub_total') // Incluye los campos necesarios

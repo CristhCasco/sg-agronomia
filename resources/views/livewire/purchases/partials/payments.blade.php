@@ -95,3 +95,9 @@
         </div>
     </div>
 </div>
+
+<script>
+    window.livewire.on('purchase-error', message => {
+        alert(message); // También podés usar SweetAlert si querés
+    });
+</script>

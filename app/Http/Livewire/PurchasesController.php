@@ -319,6 +319,19 @@ class PurchasesController extends Component
 
     public function savePurchase()
     {
+        $supplier = Supplier::find($this->supplierId);
+
+        if (!$supplier) {
+            $this->dispatchBrowserEvent('purchase-error', ['msg' => 'Proveedor no encontrado.']);
+            return;
+        }
+
+        // ⚠️ Bloquear si proveedor es "ocacional" o "desconocido" y la compra es a crédito
+        $nombre = strtolower($supplier->name);
+        if ($this->payment_type === 'CREDITO' && in_array($nombre, ['ocacional', 'desconocido'])) {
+            $this->dispatchBrowserEvent('purchase-error', ['msg' => 'No se permite hacer compras a crédito con proveedores ocacionales o desconocidos.']);
+            return;
+        }
         if ($this->payment_type == 'CONTADO' && $this->payment_method == 'EFECTIVO') {
             if (empty($this->efectivo) || !is_numeric($this->efectivo) || $this->efectivo <= 0) {
                 $this->dispatchBrowserEvent('purchase-error', ['msg' => 'EL MONTO DEL EFECTIVO ES INVÁLIDO']);
