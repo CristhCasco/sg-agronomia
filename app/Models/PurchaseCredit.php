@@ -15,7 +15,8 @@ class PurchaseCredit extends Model
         'total_credit',
         'amount_paid',
         'remaining_balance',
-        'status'
+        'status',
+        'due_date'
     ];
 
     protected $casts = [

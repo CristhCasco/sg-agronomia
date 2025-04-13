@@ -83,8 +83,8 @@
                                         </span>
                                     </td>
                                     <td>
-                                        @if ($credit->purchase && $credit->purchase->due_date)
-                                            @php $days = now()->diffInDays($credit->purchase->due_date, false); @endphp
+                                        @if ($credit->due_date)
+                                            @php $days = now()->diffInDays($credit->due_date, false); @endphp
                                             @if ($days > 3)
                                                 <span class="badge badge-success">{{ $days }} días</span>
                                             @elseif ($days > 0)
@@ -98,6 +98,7 @@
                                             <span class="text-muted">Sin fecha</span>
                                         @endif
                                     </td>
+
                                     
                                     <td>
                                         @if ($credit->status == 'PENDIENTE')

@@ -358,7 +358,7 @@ class PurchasesController extends Component
                 'status'         => $status,
                 'payment_type'   => $this->payment_type,
                 'payment_method' => $this->payment_method,
-                'due_date' => $this->payment_type == 'CREDITO' ? now()->addDays(30) : null,
+                // 'due_date' => $this->payment_type == 'CREDITO' ? now()->addDays(30) : null,
                 'discount'       => 0,
                 'discount_total' => 0,
                 'supplier_id'    => $this->supplierId,
@@ -394,6 +394,7 @@ class PurchasesController extends Component
                     'amount_paid'       => 0,
                     'remaining_balance' => $this->totalCart(),
                     'status'            => 'PENDIENTE',
+                   'due_date'          => $this->due_date ?? now()->addDays(30),
                 ]);
             }
     

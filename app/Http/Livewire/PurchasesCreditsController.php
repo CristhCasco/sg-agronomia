@@ -53,10 +53,10 @@ class PurchasesCreditsController extends Component
                 );
             });
 
-        $this->aboutToExpireCount = Purchase::where('payment_type', 'CREDITO')
-            ->where('status', 'PENDIENTE')
+            $this->aboutToExpireCount = PurchaseCredit::where('status', 'PENDIENTE')
             ->whereDate('due_date', '<=', now()->addDays(3))
             ->count();
+        
 
         $credits = $query->latest()->paginate(10);
 
