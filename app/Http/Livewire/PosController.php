@@ -382,6 +382,21 @@ class PosController extends Component
                 'discount' => round($this->discount, 2),
                 'discount_total' => round($this->discount_total, 2)
             ]);
+
+            // ❌ Validar que una venta a crédito PENDIENTE no tenga cliente inválido
+            if (
+                $saleStatus === 'PENDIENTE' &&
+                $this->payment_type === 'CREDITO'
+            ) {
+                $cliente = Customer::find($this->customerId);
+                $nombreCliente = strtolower(trim($cliente->name ?? ''));
+
+                if (in_array($nombreCliente, ['ocacional', 'desconocido'])) {
+                    $this->emit('sale-error', 'No se puede registrar una venta a crédito pendiente con un cliente "ocacional" o "desconocido".');
+                    return;
+                }
+            }
+
     
             // 📌 **Si la venta es a CRÉDITO, registrar el crédito en `sale_credits`**
             if ($this->payment_type == 'CREDITO') {

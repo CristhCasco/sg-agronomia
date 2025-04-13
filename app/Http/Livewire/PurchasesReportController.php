@@ -10,12 +10,17 @@ use App\Models\PurchaseDetail;
 use Illuminate\Support\Facades\Log;
 
 
-class PurchasesReport extends Component
+class PurchasesReportController extends Component
 {
 
     public $componentName, $data, $details, $sumDetails, $countDetails,
         $reportType, $userId, $dateFrom, $dateTo, $purchaseId;
     public $statusFilter = 'ALL';
+    public $supplierId = 0;
+    public $deletePurchaseId = null;
+
+    protected $listeners = ['deletePurchaseConfirmed' => 'deletePurchase'];
+
 
 
     public function mount()
@@ -28,6 +33,8 @@ class PurchasesReport extends Component
         $this->reportType = 0;
         $this->userId = 0;
         $this->purchaseId = 0;
+        $this->supplierId = 0;
+
     }
 
     public function render()
@@ -45,23 +52,28 @@ class PurchasesReport extends Component
     {
         if ($this->reportType == 0) {
             $from = Carbon::now()->startOfDay();
-            $to = Carbon::now()->endOfDay();
+            $to   = Carbon::now()->endOfDay();
         } else {
-            if ($this->dateFrom == '' || $this->dateTo == '') {
+            if (!$this->dateFrom || !$this->dateTo) {
                 $this->data = [];
                 return;
             }
+        
             $from = Carbon::parse($this->dateFrom)->startOfDay();
-            $to = Carbon::parse($this->dateTo)->endOfDay();
+            $to   = Carbon::parse($this->dateTo)->endOfDay();
         }
 
         $query = Purchase::join('users as u', 'u.id', 'purchases.user_id')
-            ->select('purchases.*', 'u.name as user')
+            ->join('suppliers as s', 's.id', 'purchases.supplier_id')
+            ->select('purchases.*', 'u.name as user', 's.name as supplier')
             ->whereBetween('purchases.created_at', [$from, $to]);
 
-        if ($this->userId != 0) {
-            $query->where('purchases.user_id', $this->userId);
-        }
+        // if ($this->userId != 0) {
+        //     $query->where('purchases.user_id', $this->userId);
+        // }
+        if ($this->supplierId != 0) {
+            $query->where('purchases.supplier_id', $this->supplierId);
+        }        
 
         if ($this->statusFilter !== 'ALL') {
             $query->where('purchases.status', $this->statusFilter);
@@ -91,4 +103,36 @@ class PurchasesReport extends Component
 
         $this->emit('show-modal', 'details loaded');
     }
+
+    public function confirmDelete($id)
+    {
+        $this->deletePurchaseId = $id;
+        $this->dispatchBrowserEvent('confirm-delete-purchase');
+    }
+
+    public function deletePurchase()
+    {
+        if ($this->deletePurchaseId) {
+            $purchase = Purchase::find($this->deletePurchaseId);
+    
+            if (!$purchase) return;
+    
+            // ⚠️ Si la compra es a crédito y está pendiente, no permitir eliminar
+            if ($purchase->status === 'PENDIENTE' && $purchase->payment_type === 'CREDITO') {
+                $this->dispatchBrowserEvent('purchase-cannot-delete');
+                return;
+            }
+    
+            // Eliminar detalles primero si no hay ON DELETE CASCADE
+            PurchaseDetail::where('purchase_id', $this->deletePurchaseId)->delete();
+            $purchase->delete();
+    
+            $this->deletePurchaseId = null;
+            $this->PurchasesByDate();
+    
+            $this->dispatchBrowserEvent('purchase-deleted');
+        }
+    }
+    
+
 }

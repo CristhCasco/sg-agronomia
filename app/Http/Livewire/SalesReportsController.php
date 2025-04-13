@@ -10,13 +10,20 @@ use Livewire\Component;
 use App\Models\SaleDetail;
 
 
-class ReportsController extends Component
+class SalesReportsController extends Component
 {
 
     public $componentName, $data, $details, $sumDetails, $countDetails, 
     $reportType, $userId, $dateFrom, $dateTo, $saleId;
     public $ahorroTotal;
     public $customerId = 0;
+    public $deleteSaleId = null; 
+    public $statusFilter = 'ALL';
+
+
+    protected $listeners = ['deleteSaleDirect' => 'deleteSale'];
+
+
 
 
 
@@ -31,6 +38,8 @@ class ReportsController extends Component
         $this->userId =0;
         $this->saleId =0;
         $this->customerId = 0;
+        $this->statusFilter = 'ALL';
+
 
 
     }
@@ -75,6 +84,10 @@ class ReportsController extends Component
         // Filtrar por cliente
         if ($this->customerId > 0) {
             $query->where('sales.customer_id', $this->customerId);
+        }
+        
+        if ($this->statusFilter !== 'ALL') {
+            $query->where('sales.status', $this->statusFilter);
         }
     
         // Ejecutar consulta
@@ -124,6 +137,37 @@ class ReportsController extends Component
         $products = Product::all();
         return view('livewire.reports.inventory.inventory', compact('products'));
     }
+
+    public function confirmDelete($id)
+    {
+        $this->deleteSaleId = $id;
+        $this->dispatchBrowserEvent('confirm-delete-sale');
+    }
+
+    public function deleteSale()
+    {
+        if ($this->deleteSaleId) {
+            $sale = Sale::find($this->deleteSaleId);
+    
+            if (!$sale) return;
+    
+            if ($sale->status === 'PENDIENTE') {
+                $this->dispatchBrowserEvent('sale-cannot-delete');
+                return;
+            }
+    
+            SaleDetail::where('sale_id', $this->deleteSaleId)->delete();
+            $sale->delete();
+    
+            $this->deleteSaleId = null;
+            $this->SalesByDate();
+    
+            $this->dispatchBrowserEvent('sale-deleted');
+        }
+    }
+    
+
+
  
 
 }

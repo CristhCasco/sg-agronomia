@@ -24,7 +24,9 @@ use App\Http\Livewire\SuppliersController;
 
 use App\Http\Livewire\CategoriesController;
 use App\Http\Livewire\SaleCreditsController;
+use App\Http\Livewire\SalesReportsController;
 use App\Http\Livewire\DenominationsController;
+use App\Http\Livewire\PurchasesReportController;
 use App\Http\Livewire\PurchasesCreditsController;
 use App\Http\Controllers\inventory\Imports\InventoryController;
 
@@ -80,8 +82,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get("cashout", CashoutController::class)->name('cashout');
     Route::get("reports", [HomeController::class, 'reports'])->name('reports');
-    Route::get("sales/reports", ReportsController::class)->name('sales.reports');
-    Route::get("purchases/reports", PurchasesReport::class)->name('purchases.reports');
+    Route::get("sales/reports", SalesReportsController::class)->name('sales.reports');
+    Route::get("purchases/reports", PurchasesReportController::class)->name('purchases.reports');
 
     //reportes PDF
     Route::get('report/pdf/{user}/{type}/{f1}/{f2}', [ExportController::class, 'reportPDF']);
@@ -89,7 +91,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('report/purchases/pdf/{user}/{type}', [ExportController::class, 'reportPurchasePDF']);
     Route::get('report/purchases/pdf/{user}/{type}/{f1}/{f2}', [ExportController::class, 'reportPurchasePDF']);
-    Route::get('/reports/inventory', [ReportsController::class, 'inventory'])->name('inventory.reports');
+    Route::get('/reports/inventory', [SalesReportsController::class, 'inventory'])->name('inventory.reports');
 
     //EXPORTAR PRODUCTOS A EXCEL
     Route::get('export/products', [ExportController::class, 'exportProducts'])->name('export.products');
