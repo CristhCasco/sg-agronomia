@@ -79,6 +79,12 @@ class SaleCreditsController extends Component
             $credit->status = $credit->remaining_balance == 0 ? 'PAGADO' : 'PENDIENTE';
             $credit->save();
 
+            // ✅ Actualizar también la venta si el crédito está completamente pagado
+            if ($credit->remaining_balance == 0 && $credit->sale) {
+                $credit->sale->status = 'PAGADO';
+                $credit->sale->save();
+            }
+
             DB::commit();
 
             $this->emit('credit-paid', 'Pago registrado con éxito.');
