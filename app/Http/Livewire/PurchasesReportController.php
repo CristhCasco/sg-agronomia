@@ -50,37 +50,42 @@ class PurchasesReportController extends Component
 
     public function PurchasesByDate()
     {
-        if ($this->reportType == 0) {
-            $from = Carbon::now()->startOfDay();
-            $to   = Carbon::now()->endOfDay();
-        } else {
-            if (!$this->dateFrom || !$this->dateTo) {
-                $this->data = [];
-                return;
+        try {
+            if ($this->reportType == 0) {
+                $from = Carbon::now()->startOfDay();
+                $to   = Carbon::now()->endOfDay();
+            } else {
+                // Validar bien las fechas para evitar errores
+                if (empty($this->dateFrom) || empty($this->dateTo)) {
+                    $this->data = [];
+                    return;
+                }
+    
+                $from = Carbon::parse($this->dateFrom)->startOfDay();
+                $to   = Carbon::parse($this->dateTo)->endOfDay();
             }
-        
-            $from = Carbon::parse($this->dateFrom)->startOfDay();
-            $to   = Carbon::parse($this->dateTo)->endOfDay();
+    
+            $query = Purchase::join('users as u', 'u.id', '=', 'purchases.user_id')
+                ->join('suppliers as s', 's.id', '=', 'purchases.supplier_id')
+                ->select('purchases.*', 'u.name as user', 's.name as supplier')
+                ->whereBetween('purchases.created_at', [$from, $to]);
+    
+            if ($this->supplierId != 0) {
+                $query->where('purchases.supplier_id', $this->supplierId);
+            }
+    
+            if ($this->statusFilter !== 'ALL') {
+                $query->where('purchases.status', $this->statusFilter);
+            }
+    
+            $this->data = $query->get();
+        } catch (\Exception $e) {
+            // Podés loguear el error para depurar si vuelve a fallar en producción
+           // \Log::error('Error al generar reporte de compras: ' . $e->getMessage());
+            $this->data = []; // Evitar caída total
         }
-
-        $query = Purchase::join('users as u', 'u.id', 'purchases.user_id')
-            ->join('suppliers as s', 's.id', 'purchases.supplier_id')
-            ->select('purchases.*', 'u.name as user', 's.name as supplier')
-            ->whereBetween('purchases.created_at', [$from, $to]);
-
-        // if ($this->userId != 0) {
-        //     $query->where('purchases.user_id', $this->userId);
-        // }
-        if ($this->supplierId != 0) {
-            $query->where('purchases.supplier_id', $this->supplierId);
-        }        
-
-        if ($this->statusFilter !== 'ALL') {
-            $query->where('purchases.status', $this->statusFilter);
-        }
-
-        $this->data = $query->get();
     }
+    
 
 
 

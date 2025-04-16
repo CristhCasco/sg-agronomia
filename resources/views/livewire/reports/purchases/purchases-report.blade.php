@@ -50,15 +50,22 @@
 
                         <div class="col-md-2">
                             <label class="text-muted">Desde</label>
-                            <input type="text" wire:model="dateFrom" class="form-control flatpickr" placeholder="Desde"
+                            <input type="date"
+                                wire:model="dateFrom"
+                                class="form-control"
+                                placeholder="Desde"
                                 {{ $reportType == 0 ? 'disabled' : '' }}>
                         </div>
 
                         <div class="col-md-2">
                             <label class="text-muted">Hasta</label>
-                            <input type="text" wire:model="dateTo" class="form-control flatpickr" placeholder="Hasta"
+                            <input type="date"
+                                wire:model="dateTo"
+                                class="form-control"
+                                placeholder="Hasta"
                                 {{ $reportType == 0 ? 'disabled' : '' }}>
                         </div>
+
 
                         <div class="col-md-2 d-flex gap-1">
                             <button wire:click="$refresh" class="btn btn-dark w-100">Consultar</button>

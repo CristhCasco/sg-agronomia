@@ -51,14 +51,20 @@
 
                         <div class="col-md-2">
                             <label class="text-muted">Desde</label>
-                            <input type="text" wire:model="dateFrom" class="form-control flatpickr"
-                                placeholder="Desde" {{ $reportType==0 ? 'disabled' : '' }}>
+                            <input type="date"
+                                wire:model="dateFrom"
+                                class="form-control flatpickr"
+                                placeholder="Desde"
+                                {{ $reportType == 0 ? 'disabled' : '' }}>
                         </div>
 
                         <div class="col-md-2">
                             <label class="text-muted">Hasta</label>
-                            <input type="text" wire:model="dateTo" class="form-control flatpickr"
-                                placeholder="Hasta" {{ $reportType==0 ? 'disabled' : '' }}>
+                            <input type="date"
+                                wire:model="dateTo"
+                                class="form-control flatpickr"
+                                placeholder="Hasta"
+                                {{ $reportType == 0 ? 'disabled' : '' }}>
                         </div>
 
 

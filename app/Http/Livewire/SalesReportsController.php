@@ -58,41 +58,48 @@ class SalesReportsController extends Component
     public function SalesByDate()
     {
         if ($this->reportType == 0) {
-            $from = Carbon::now()->format('Y-m-d') . ' 00:00:00';
-            $to   = Carbon::now()->format('Y-m-d') . ' 23:59:59';
+            $from = Carbon::now()->startOfDay();
+            $to = Carbon::now()->endOfDay();
         } else {
-            if ($this->dateFrom == '' || $this->dateTo == '') {
+            if (empty($this->dateFrom) || empty($this->dateTo)) {
                 $this->data = [];
                 return;
             }
-    
-            $from = Carbon::parse($this->dateFrom)->format('Y-m-d') . ' 00:00:00';
-            $to   = Carbon::parse($this->dateTo)->format('Y-m-d') . ' 23:59:59';
+
+            try {
+                $from = Carbon::parse($this->dateFrom)->startOfDay();
+                $to = Carbon::parse($this->dateTo)->endOfDay();
+            } catch (\Exception $e) {
+                $this->data = [];
+                return;
+            }
         }
-    
+
         // Comienza la query base
         $query = Sale::join('users as u', 'u.id', 'sales.user_id')
             ->join('customers as c', 'c.id', 'sales.customer_id')
             ->select('sales.*', 'u.name as usuario', 'c.name as customer')
             ->whereBetween('sales.created_at', [$from, $to]);
-    
+
         // Filtrar por usuario
         if ($this->userId > 0) {
             $query->where('sales.user_id', $this->userId);
         }
-    
+
         // Filtrar por cliente
         if ($this->customerId > 0) {
             $query->where('sales.customer_id', $this->customerId);
         }
-        
+
+        // Filtrar por estado
         if ($this->statusFilter !== 'ALL') {
             $query->where('sales.status', $this->statusFilter);
         }
-    
+
         // Ejecutar consulta
         $this->data = $query->get();
     }
+
     
 
 
