@@ -30,8 +30,10 @@ class PurchasesCreditsController extends Component
 
     public function mount()
     {
-        $this->startDate = now()->startOfMonth()->format('Y-m-d');
-        $this->endDate = now()->endOfMonth()->format('Y-m-d');
+        // $this->startDate = now()->startOfMonth()->format('Y-m-d');
+        // $this->endDate = now()->endOfMonth()->format('Y-m-d');
+        $this->startDate = null;
+        $this->endDate = null;
     }
 
     public function render()
