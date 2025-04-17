@@ -332,39 +332,39 @@ class PurchasesController extends Component
             $this->dispatchBrowserEvent('purchase-error', ['msg' => 'No se permite hacer compras a crédito con proveedores ocacionales o desconocidos.']);
             return;
         }
+
         if ($this->payment_type == 'CONTADO' && $this->payment_method == 'EFECTIVO') {
             if (empty($this->efectivo) || !is_numeric($this->efectivo) || $this->efectivo <= 0) {
                 $this->dispatchBrowserEvent('purchase-error', ['msg' => 'EL MONTO DEL EFECTIVO ES INVÁLIDO']);
                 return;
             }
         }
-    
+
         if ($this->supplierId == null) {
             $this->dispatchBrowserEvent('purchase-error', ['msg' => 'SELECCIONA EL PROVEEDOR']);
             return;
         }
-    
+
         DB::beginTransaction();
-    
+
         try {
             $status = $this->payment_type == 'CREDITO' ? 'PENDIENTE' : 'PAGADO';
-    
+
             $purchase = Purchase::create([
                 'items'          => $this->totalItems(),
                 'sub_total'      => round($this->subtotalCart(), 2),
                 'total'          => $this->totalCart(),
-                'cash'           => 0,
+                'cash'           => $this->efectivo,
                 'change'         => 0,
                 'status'         => $status,
                 'payment_type'   => $this->payment_type,
                 'payment_method' => $this->payment_method,
-                // 'due_date' => $this->payment_type == 'CREDITO' ? now()->addDays(30) : null,
                 'discount'       => 0,
                 'discount_total' => 0,
                 'supplier_id'    => $this->supplierId,
                 'user_id'        => auth()->id()
             ]);
-    
+
             foreach ($this->carrito as $item) {
                 PurchaseDetail::create([
                     'price'       => $item['cost'],
@@ -373,47 +373,62 @@ class PurchasesController extends Component
                     'purchase_id' => $purchase->id,
                     'total'       => $item['total']
                 ]);
-    
+
                 $product = Product::find($item['id']);
                 $product->stock += $item['qty'];
                 $product->cost = $item['cost'];
-    
+
                 if (isset($item['margen']) && is_numeric($item['margen']) && $item['margen'] >= 0) {
                     $ganancia = $item['cost'] * ($item['margen'] / 100);
                     $product->price = round($item['cost'] + $ganancia, 2);
                 }
-    
+
                 $product->save();
             }
-    
-            // Crea el crédito desde la relación definida en el modelo
+
+            // Crear el crédito
             if ($this->payment_type === 'CREDITO') {
-                $purchase->credit()->create([
+                $credit = $purchase->credit()->create([
                     'supplier_id'       => $this->supplierId,
                     'total_credit'      => $this->totalCart(),
-                    'amount_paid'       => 0,
-                    'remaining_balance' => $this->totalCart(),
-                    'status'            => 'PENDIENTE',
-                   'due_date'          => $this->due_date ?? now()->addDays(30),
+                    'amount_paid'       => $this->efectivo > 0 ? $this->efectivo : 0,
+                    'remaining_balance' => $this->totalCart() - $this->efectivo,
+                    'status'            => ($this->efectivo >= $this->totalCart()) ? 'PAGADO' : 'PENDIENTE',
+                    'due_date'          => $this->due_date ?? now()->addDays(30),
                 ]);
+
+                if ($this->efectivo > 0) {
+                    $credit->payments()->create([
+                        'amount_paid'  => $this->efectivo,
+                        'payment_date' => now(),
+                        'user_id'      => auth()->id()
+                    ]);
+
+                    // Si pagó todo en el momento, también se actualiza la compra
+                    if ($credit->status === 'PAGADO') {
+                        $purchase->status = 'PAGADO';
+                        $purchase->save();
+                    }
+                }
             }
-    
+
             DB::commit();
-    
+
             $this->clear();
             $this->efectivo = 0;
             $this->change = 0;
-    
+
             $this->dispatchBrowserEvent('purchase-ok', ['msg' => 'Compra Registrada']);
             $this->resetSupplier();
             $this->resetPaymentInfo();
             $this->mostrarResumen = false;
-    
+
         } catch (\Throwable $th) {
             DB::rollback();
             $this->dispatchBrowserEvent('purchase-error', ['msg' => $th->getMessage()]);
         }
     }
+
     
 
     public function ACash($value)
