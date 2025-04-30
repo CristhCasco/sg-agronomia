@@ -24,4 +24,16 @@ class SaleCreditPayment extends Model
         return $this->belongsTo(SaleCredit::class, 'credit_id'); // 👈 esta es la columna real
     }
 
+    public function credit()
+    {
+        return $this->belongsTo(\App\Models\SaleCredit::class, 'credit_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
+
+
 }

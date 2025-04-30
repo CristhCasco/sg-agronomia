@@ -26,6 +26,7 @@ use App\Http\Livewire\CategoriesController;
 use App\Http\Livewire\SaleCreditsController;
 use App\Http\Livewire\SalesReportsController;
 use App\Http\Livewire\DenominationsController;
+use App\Http\Controllers\PdfCreditController;
 use App\Http\Livewire\PurchasesReportController;
 use App\Http\Livewire\PurchasesCreditsController;
 use App\Http\Controllers\inventory\Imports\InventoryController;
@@ -69,6 +70,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get("purchases", PurchasesController::class)->name('purchases');
     Route::get('/credits/sales', SaleCreditsController::class)->name('sale-credits');
     Route::get('/credits/purchases', PurchasesCreditsController::class)->name('purchase-credits');
+    Route::middleware(['auth'])->get('/creditos/pagos/{hash}/comprobante', [PdfCreditController::class, 'imprimirComprobante'])->name('creditos.comprobante');
+
 
 
     Route::group(['middleware' => ['role:admin']], function () {

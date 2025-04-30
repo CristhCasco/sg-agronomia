@@ -67,19 +67,20 @@ class SaleCreditsController extends Component
         DB::beginTransaction();
 
         try {
-            SaleCreditPayment::create([
+            $pago = SaleCreditPayment::create([
                 'credit_id' => $this->creditId,
                 'amount_paid' => $this->amount,
                 'payment_date' => now(),
                 'user_id' => Auth::id(),
             ]);
 
+            $this->emit('comprobante-generado', base64_encode($pago->id)); 
+
             $credit->amount_paid += $this->amount;
             $credit->remaining_balance = max(0, $credit->total_credit - $credit->amount_paid);
             $credit->status = $credit->remaining_balance == 0 ? 'PAGADO' : 'PENDIENTE';
             $credit->save();
 
-            // ✅ Actualizar también la venta si el crédito está completamente pagado
             if ($credit->remaining_balance == 0 && $credit->sale) {
                 $credit->sale->status = 'PAGADO';
                 $credit->sale->save();
@@ -96,6 +97,7 @@ class SaleCreditsController extends Component
             $this->emit('credit-error', $e->getMessage());
         }
     }
+
 
     public function resetFilters()
     {

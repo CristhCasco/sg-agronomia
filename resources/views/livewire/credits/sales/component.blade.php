@@ -162,5 +162,10 @@
         window.livewire.on('show-credit-details', () => {
             $('#creditDetailsModal').modal('show');
         });
+
+        Livewire.on('comprobante-generado', paymentHash => {
+        const url = `/creditos/pagos/${paymentHash}/comprobante`;
+        window.open(url, '_blank');
+    });
     });
 </script>

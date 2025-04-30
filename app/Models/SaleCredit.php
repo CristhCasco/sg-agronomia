@@ -32,5 +32,11 @@ class SaleCredit extends Model
         return $this->belongsTo(Sale::class, 'sale_id');
     }
 
+    public function credit()
+    {
+        return $this->belongsTo(SaleCredit::class, 'credit_id');
+    }
+
+
 
 }
